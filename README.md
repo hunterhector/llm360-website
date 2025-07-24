@@ -6,10 +6,10 @@ This repository contains the source code for the LLM360 website, built with Jeky
 
 ## ✍️ For Contributing a Blog Post
 
-New blog posts are created as Markdown files within the `_posts` directory.
+Please create a Pull Request from your own fork to add the post following steps. During the PR, the CI/CD check will create a preview deployment of the website where you can double check your post.
 
 1.  **Create a New File:**
-    Navigate to the `_posts` directory in your project. Create a new Markdown file with the following naming convention:
+    New blog posts are created as Markdown files within the `_posts` directory. Navigate to the `_posts` directory in your project. Create a new Markdown file with the following naming convention:
     `YYYY-MM-DD-your-post-title.md`
 
       * `YYYY-MM-DD`: The full date of the post. 
@@ -19,7 +19,10 @@ New blog posts are created as Markdown files within the `_posts` directory.
     **Example:** `_posts/2025-07-15-my-new-research-update.md`
 
 2.  **Add YAML Front Matter:**
-    Every blog post **must** start with a YAML Front Matter block. This provides metadata for Jekyll and the `al-folio` theme.
+    Every blog post **must** start with a YAML Front Matter block. This provides metadata for Jekyll and the `al-folio` theme. 
+
+    Note that the blog post will be published **after** the date field specified in the YAML. So to get a preview of your blog post, you will probably need to set the date field later than your actul time.
+
 
     ````yaml
     ---
@@ -32,8 +35,6 @@ New blog posts are created as Markdown files within the `_posts` directory.
     # Optional: Add an image for social media previews. These images should be placed in the 'assets/img/posts/' folder (al-folio's asset directory).
     # image: /assets/img/posts/your-post-image.jpg
     ---
-
-    Note that the blog post will be published after the time specified in the YAML.
 
     ## Your Post Content Starts Here
 
