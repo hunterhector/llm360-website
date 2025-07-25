@@ -1,11 +1,18 @@
 <!-- Custom _includes/head.liquid to override al-folio's default -->
 <!-- This file is in your repository at _includes/head.liquid -->
+<!-- It uses standard Jekyll filters designed to work with GitHub Pages' automatic URL/BaseURL settings -->
+
+<!-- DEBUGGING INFO - REMOVE AFTER DEBUGGING -->
+<!-- Site URL: {{ site.url }} -->
+<!-- Site Baseurl: {{ site.baseurl }} -->
+<!-- Page URL: {{ page.url }} -->
+<!-- END DEBUGGING INFO -->
 
 <!-- Metadata, OpenGraph and Schema.org -->
 {% include metadata.liquid %}
 
 <!-- Bootstrap & MDB -->
-<link rel="stylesheet" href="{{ site.url | append: '/assets/css/bootstrap.min.css' | bust_file_cache }}">
+<link rel="stylesheet" href="{{ '/assets/css/bootstrap.min.css' | relative_url | bust_file_cache }}">
 <link
   rel="stylesheet"
   href="{{ site.third_party_libraries.mdb.url.css }}"
@@ -25,8 +32,8 @@
 {% endif %}
 
 <!-- Fonts & Icons -->
-<link defer rel="stylesheet" href="{{ site.url | append: '/assets/css/academicons.min.css' | bust_file_cache }}">
-<link defer rel="stylesheet" href="{{ site.url | append: '/assets/css/scholar-icons.css' | bust_file_cache }}">
+<link defer rel="stylesheet" href="{{ '/assets/css/academicons.min.css' | relative_url | bust_file_cache }}">
+<link defer rel="stylesheet" href="{{ '/assets/css/scholar-icons.css' | relative_url | bust_file_cache }}">
 <link
   defer
   rel="stylesheet"
@@ -38,14 +45,14 @@
 <link
   defer
   rel="stylesheet"
-  href="{{ site.url | append: '/assets/css/jekyll-pygments-themes-github.css' | bust_file_cache }}"
+  href="{{ '/assets/css/jekyll-pygments-themes-github.css' | relative_url | bust_file_cache }}"
   media=""
   id="highlight_theme_light"
 >
 
 {% if page.toc and page.toc.sidebar %}
   <!-- Sidebar Table of Contents -->
-  <link defer href="{{ site.url | append: '/assets/css/bootstrap-toc.min.css' | bust_file_cache }}" rel="stylesheet">
+  <link defer href="{{ '/assets/css/bootstrap-toc.min.css' | relative_url | bust_file_cache }}" rel="stylesheet">
 {% endif %}
 
 <!-- Styles -->
@@ -67,23 +74,27 @@
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>{{ site.icon }}</text></svg>"
   >
 {% elsif site.icon != blank %}
-  {# FIX: Ensure favicon path is correct. It should be relative to baseurl #}
   <link rel="shortcut icon" href="{{ site.icon | relative_url | bust_file_cache}}">
 {% endif %}
 
-{# FIX: Main CSS link - use site.url for absolute path #}
-<link rel="stylesheet" href="{{ site.url | append: '/assets/css/main.css' | bust_css_cache }}">
+{# Main CSS link - use relative_url #}
+<link rel="stylesheet" href="{{ '/assets/css/main.css' | relative_url | bust_css_cache }}">
+{# Your custom main.css #}
+<link rel="stylesheet" href="{{ '/static-assets/css/main.css' | relative_url }}">
+{# al-folio custom SCSS compiled CSS #}
+<link rel="stylesheet" href="{{ '/assets/css/al-folio-custom.css' | relative_url }}">
 
-{# FIX: Canonical URL - use site.url and page.url directly, then replace index.html #}
-<link rel="canonical" href="{{ site.url }}{{ page.url | replace:'index.html','' }}">
+
+{# Canonical URL - use absolute_url #}
+<link rel="canonical" href="{{ page.url | absolute_url }}">
 
 {% if site.enable_darkmode %}
   <!-- Dark Mode -->
-  <script src="{{ site.url | append: '/assets/js/theme.js' | bust_file_cache }}"></script>
+  <script src="{{ '/assets/js/theme.js' | relative_url | bust_file_cache }}"></script>
   <link
     defer
     rel="stylesheet"
-    href="{{ site.url | append: '/assets/css/jekyll-pygments-themes-native.css' | bust_file_cache }}"
+    href="{{ '/assets/css/jekyll-pygments-themes-native.css' | relative_url | bust_file_cache }}"
     media="none"
     id="highlight_theme_dark"
   >
