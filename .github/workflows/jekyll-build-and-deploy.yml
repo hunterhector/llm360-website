@@ -77,30 +77,13 @@ jobs:
         uses: actions/configure-pages@v3
 
       - name: Build Jekyll site
-        # Dynamically set URL and Baseurl based on repository and branch
-        run: |
-          BUILD_COMMAND="bundle exec jekyll build --trace"
-
-          # Determine URL and Baseurl based on the repository and branch
-          # For the main LLM360/website repo (production custom domain)
-          if [[ "${{ github.repository }}" == "LLM360/website" ]]; then
-            BUILD_COMMAND+=" --url 'https://www.llm360.ai' --baseurl ''"
-          # For forks (project pages)
-          elif [[ "${{ github.repository_owner }}" == "hunterhector" && "${{ github.event.repository.name }}" == "llm360-website" ]]; then
-            BUILD_COMMAND+=" --url 'https://${{ github.repository_owner }}.github.io' --baseurl '/${{ github.event.repository.name }}'"
-          # Fallback for other forks/local (Jekyll will use defaults)
-          else
-            echo "Building with default Jekyll URL/Baseurl detection."
-            # The pages_setup action already sets base_url for GH Pages,
-            # but for other forks, Jekyll's defaults for url/baseurl will apply.
-            # We explicitly pass base_url here to ensure it's always set for GH Pages builds.
-            BUILD_COMMAND+=" --baseurl '${{ steps.pages_setup.outputs.base_url }}'"
-          fi
-
-          echo "Running Jekyll build command: $BUILD_COMMAND"
-          eval $BUILD_COMMAND
+        # Standard Jekyll build command.
+        # GitHub Pages automatically sets site.url and site.baseurl based on repo settings
+        # when these are NOT explicitly set in _config.yml.
+        # The --baseurl argument is provided by configure-pages action for project pages.
+        run: bundle exec jekyll build --trace --baseurl "${{ steps.pages_setup.outputs.base_url }}"
         env:
-          JEKYLL_ENV: production
+          JEKYLL_ENV: production # Keep this for environment-specific Liquid logic
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
