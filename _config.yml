@@ -29,9 +29,9 @@ description: [Open and transparent LLM resaearch for the community.]
 author: [The LLM360 Team]
 email: [team@llm360.ai]
 
-# # Custom Domain Specifics (Crucial if you have a custom domain)
-baseurl: ""
-url: "https://www.llm360.ai"
+# Custom Domain Specifics (Crucial if you have a custom domain)
+# baseurl: ""
+# url: "https://www.llm360.ai"
 
 lang: en # Language of your site
 icon: 💡 # Emoji favicon, or specify path to image like /assets/img/favicon.png
