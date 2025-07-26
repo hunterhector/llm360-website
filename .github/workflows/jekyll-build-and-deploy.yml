@@ -88,10 +88,7 @@ jobs:
       - name: Build Jekyll site
         # CRITICAL DEBUGGING STEP: Print site.url and site.baseurl values
         run: |
-          echo "--- Jekyll Site URL and Baseurl (DEBUG) ---"
-          bundle exec jekyll build --trace | grep -E "Site URL:|Base URL:" || true
-          echo "--- End Debug ---"
-          bundle exec jekyll build --trace --baseurl "${{ steps.pages_setup.outputs.base_url }}"
+          bundle exec jekyll build
         env:
           # Set the JEKYLL_ENV to production for the build step (good practice)
           JEKYLL_ENV: production # This can influence how some themes/plugins behave
