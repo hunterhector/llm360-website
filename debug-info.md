@@ -1,3 +1,4 @@
+---
 layout: default # Use the theme's default layout
 title: Debug Information
 permalink: /debug-info/
@@ -14,6 +15,3 @@ This page is for debugging purposes. Please copy the values below.
 * **Relative URL for /assets/css/main.css:** `{{ '/assets/css/main.css' | relative_url }}`
 * **Absolute URL for /assets/css/main.css:** `{{ '/assets/css/main.css' | absolute_url }}`
 * **Canonical URL (from theme's head.liquid):** `{{ page.url | replace:'index.html','' | absolute_url }}`
-
----
-</script>
