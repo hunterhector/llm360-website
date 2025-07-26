@@ -1,7 +1,6 @@
 # This workflow builds your Jekyll site and deploys it to GitHub Pages.
-# It handles only the main site deployment (from 'main' branch)
-# and manual deployments via workflow_dispatch.
-# PR preview logic has been removed.
+# It handles both the main site deployment (from 'main' branch)
+# and temporary Pull Request preview deployments.
 
 name: Jekyll Build and Deploy
 
@@ -11,11 +10,15 @@ on:
   push:
     branches:
       - main
+  # Triggers the workflow on pull request events (for PR previews)
+  pull_request:
+    branches:
+      - main # PRs targeting the main branch
   # Allows you to run this workflow manually from the Actions tab in GitHub.
   workflow_dispatch:
     inputs:
       target_ref:
-        description: 'Branch name (e.g., feature/my-branch) to build/deploy. Leave empty to use the current branch (main).'
+        description: 'Branch name (e.g., feature/my-branch) or PR number (e.g., 123) to build/deploy. Leave empty to use the current branch.'
         required: false
         type: string
 
@@ -23,6 +26,7 @@ on:
 jobs:
   # Job to perform the build and deploy
   deploy_site:
+    # This job will always run on push/pull_request, or manually via workflow_dispatch
     runs-on: ubuntu-latest
 
     permissions:
@@ -39,16 +43,21 @@ jobs:
         id: determine_ref
         run: |
           # Logic to determine the correct ref to checkout based on event type and inputs
+          # For pull_request event, checkout the head ref of the PR
           # For push event, checkout the main branch
           # For workflow_dispatch:
-          #   If target_ref is empty, use the current branch (main)
-          #   Else, checkout the specified branch name
-          if [[ "${{ github.event_name }}" == "push" ]]; then
+          #   If target_ref is a PR number (e.g., "123"), checkout 'refs/pull/123/merge'
+          #   Else (if target_ref is a branch name or empty), checkout that ref
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "CHECKOUT_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
             echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             INPUT_REF="${{ github.event.inputs.target_ref }}"
             if [[ -z "$INPUT_REF" ]]; then # If target_ref is empty, use the current branch
               echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_OUTPUT # Use github.ref for the actual branch ref
+            elif [[ "$INPUT_REF" =~ ^[0-9]+$ ]]; then # Check if input is a number (PR number)
+              echo "CHECKOUT_REF=refs/pull/${INPUT_REF}/merge" >> $GITHUB_OUTPUT
             else # Assume it's a branch name
               echo "CHECKOUT_REF=refs/heads/${INPUT_REF}" >> $GITHUB_OUTPUT
             fi
@@ -77,8 +86,15 @@ jobs:
         uses: actions/configure-pages@v3
 
       - name: Build Jekyll site
-        # CRITICAL FIX: Explicitly pass the baseurl to Jekyll build using the output from Setup Pages
-        run: bundle exec jekyll build --trace --baseurl "${{ steps.pages_setup.outputs.base_url }}"
+        # CRITICAL DEBUGGING STEP: Print site.url and site.baseurl values
+        run: |
+          echo "--- Jekyll Site URL and Baseurl (DEBUG) ---"
+          bundle exec jekyll build --trace | grep -E "Site URL:|Base URL:" || true
+          echo "--- End Debug ---"
+          bundle exec jekyll build --trace --baseurl "${{ steps.pages_setup.outputs.base_url }}"
+        env:
+          # Set the JEKYLL_ENV to production for the build step (good practice)
+          JEKYLL_ENV: production # This can influence how some themes/plugins behave
 
       - name: Upload artifact
         # Uploads the '_site' directory (your built Jekyll site) as an artifact.
