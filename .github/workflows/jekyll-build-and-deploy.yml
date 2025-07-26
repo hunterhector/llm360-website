@@ -26,7 +26,6 @@ on:
 jobs:
   # Job to perform the build and deploy
   deploy_site:
-    # This job will always run on push/pull_request, or manually via workflow_dispatch
     runs-on: ubuntu-latest
 
     permissions:
@@ -42,23 +41,17 @@ jobs:
       - name: Determine Ref for Checkout
         id: determine_ref
         run: |
-          # Logic to determine the correct ref to checkout based on event type and inputs
-          # For pull_request event, checkout the head ref of the PR
-          # For push event, checkout the main branch
-          # For workflow_dispatch:
-          #   If target_ref is a PR number (e.g., "123"), checkout 'refs/pull/123/merge'
-          #   Else (if target_ref is a branch name or empty), checkout that ref
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             echo "CHECKOUT_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "push" ]]; then
             echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_OUTPUT
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             INPUT_REF="${{ github.event.inputs.target_ref }}"
-            if [[ -z "$INPUT_REF" ]]; then # If target_ref is empty, use the current branch
-              echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_OUTPUT # Use github.ref for the actual branch ref
-            elif [[ "$INPUT_REF" =~ ^[0-9]+$ ]]; then # Check if input is a number (PR number)
+            if [[ -z "$INPUT_REF" ]]; then
+              echo "CHECKOUT_REF=${{ github.ref }}" >> $GITHUB_OUTPUT
+            elif [[ "$INPUT_REF" =~ ^[0-9]+$ ]]; then
               echo "CHECKOUT_REF=refs/pull/${INPUT_REF}/merge" >> $GITHUB_OUTPUT
-            else # Assume it's a branch name
+            else
               echo "CHECKOUT_REF=refs/heads/${INPUT_REF}" >> $GITHUB_OUTPUT
             fi
           fi
@@ -68,40 +61,52 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ steps.determine_ref.outputs.CHECKOUT_REF }}
-          fetch-depth: 0 # Fetch all history for Jekyll (if needed by some plugins)
+          fetch-depth: 0
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2.2' # IMPORTANT: Ensure this matches your local Ruby version
-          bundler-cache: true # Caches installed gems for faster builds
+          ruby-version: '3.2.2'
+          bundler-cache: true
 
       - name: Install Jekyll dependencies
         run: bundle install
 
       - name: Setup Pages
-        # This action configures the GitHub Pages environment for deployment.
-        # It sets up necessary environment variables like GITHUB_PAGES_URL.
-        id: pages_setup # Added an ID to access its outputs
+        id: pages_setup
         uses: actions/configure-pages@v3
 
       - name: Build Jekyll site
-        # CRITICAL DEBUGGING STEP: Print site.url and site.baseurl values
+        # Dynamically set URL and Baseurl based on repository and branch
         run: |
-          bundle exec jekyll build
+          BUILD_COMMAND="bundle exec jekyll build --trace"
+
+          # Determine URL and Baseurl based on the repository and branch
+          # For the main LLM360/website repo (production custom domain)
+          if [[ "${{ github.repository }}" == "LLM360/website" ]]; then
+            BUILD_COMMAND+=" --url 'https://www.llm360.ai' --baseurl ''"
+          # For forks (project pages)
+          elif [[ "${{ github.repository_owner }}" == "hunterhector" && "${{ github.event.repository.name }}" == "llm360-website" ]]; then
+            BUILD_COMMAND+=" --url 'https://${{ github.repository_owner }}.github.io' --baseurl '/${{ github.event.repository.name }}'"
+          # Fallback for other forks/local (Jekyll will use defaults)
+          else
+            echo "Building with default Jekyll URL/Baseurl detection."
+            # The pages_setup action already sets base_url for GH Pages,
+            # but for other forks, Jekyll's defaults for url/baseurl will apply.
+            # We explicitly pass base_url here to ensure it's always set for GH Pages builds.
+            BUILD_COMMAND+=" --baseurl '${{ steps.pages_setup.outputs.base_url }}'"
+          fi
+
+          echo "Running Jekyll build command: $BUILD_COMMAND"
+          eval $BUILD_COMMAND
         env:
-          # Set the JEKYLL_ENV to production for the build step (good practice)
-          JEKYLL_ENV: production # This can influence how some themes/plugins behave
+          JEKYLL_ENV: production
 
       - name: Upload artifact
-        # Uploads the '_site' directory (your built Jekyll site) as an artifact.
-        # This artifact will then be used by the deploy-pages action.
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './_site' # The directory where Jekyll builds your site
+          path: './_site'
 
       - name: Deploy to GitHub Pages
-        # Deploys the uploaded artifact to GitHub Pages.
-        # The 'id' allows us to reference its outputs, like the page_url.
         id: deployment
         uses: actions/deploy-pages@v4
